@@ -1,4 +1,4 @@
-import strutils
+#import strutils
 import math
 
 type
@@ -14,8 +14,13 @@ proc initGraph*(g:var Graph,size:int,clients:seq[tuple[x:float,y:float]])=
 
   g.dim=n
 
-  for i in countup(0,n-2):
-    for j in countup(i+1,n-1):
-      d=sqrt((clients[j].x-clients[i].x)^2 + (clients[j].y-clients[i].y)^2)
-      g.clients[i+1][j+1]=(d,0.0)
-      echo "Distance: ", d
+  for i in countup(1,n):
+    for j in countup(i,n):
+      if i == j:
+        g.clients[i][j]=(0,0.0)
+        echo "Ocurre"
+      else:
+        d=sqrt((clients[j-1].x-clients[i-1].x)^2 + (clients[j-1].y-clients[i-1].y)^2)
+        g.clients[i][j]=(d,0.0)
+        g.clients[j][i]=(d,0.0)
+        echo "Distance: ", d
