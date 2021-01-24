@@ -3,9 +3,9 @@ import tables
 
 type
   Truck* = object
-    route*:seq[int]
+    route*: seq[int]
     leftCapacity*:float
-    numClienst*:int
+    numClients*:int
     last*:int
     excess*:bool
     cst*:float
@@ -16,8 +16,11 @@ proc initTruck*(capacity:float):Truck=
     t:Truck
 
   t.leftCapacity=capacity
+  t.numClients=0
   t.cst=0.0
   t.excess=false
+  t.last=1
+  return t
 
 
 proc getTrucks*(numTrucks:int,capacity:float):Table[int,Truck]=
@@ -49,3 +52,16 @@ proc addClientRoute*(t:var Truck,c:tuple[id:int,cp:float],g:Graph)=
 
   if t.leftCapacity < 0:
     t.excess=true
+
+proc resetTruck*(t:var Truck,capacity:float)=
+  t.route= @[]
+  t.leftCapacity=capacity
+  t.numClients=0
+  t.last=1
+  t.excess=false
+  t.cst=0.0
+
+proc `$`*(t:Truck):string=
+  var st:string
+  st="TRUCK\n" & "Route: " & $t.route & "\nLeft Capacity: " & $t.leftCapacity & "\nCost Truck: " & $t.cst
+  return st
