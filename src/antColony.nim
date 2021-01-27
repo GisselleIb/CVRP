@@ -44,14 +44,14 @@ proc antQuality(colony:var AntColony,min,max:float)=
 proc pheromoneUpdate*(colony:AntColony,g:var Graph)=
   for i in countup(1,g.dim-1):
     for j in countup(i+1,g.dim):
-      g.clients[i][j].pheromone=(1-colony.phi)*g.clients[i][j].pheromone
+      g.clients[i][j].pheromone=colony.phi*g.clients[i][j].pheromone
       g.clients[j][i].pheromone=g.clients[i][j].pheromone
 
   #colony.ants=colony.ants.sortedByIt(it.cst)
   #echo "nvsknvsdknvdsknvdsnvsdjknvsdkjnvdsknvsd", colony.ants
 
   for a in colony.ants:
-    a.routePheromone(g,colony.phi)
+    a.routePheromone(g,0.9)
 
 
 proc initColony*(size,numTrucks:int,capacity,q0,phi:float,g:var Graph,d:seq[tuple[id:int,cp:float]]):AntColony=
@@ -95,6 +95,6 @@ proc antSystem*(colony:var AntColony,g:var Graph,iterations:int):Ant=
     (min,max)=colony.construction(g)
     colony.antQuality(min,max)
     colony.pheromoneUpdate(g)
-    echo colony.best.cst
+  echo colony.best.cst
 
   return colony.best

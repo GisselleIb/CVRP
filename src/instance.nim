@@ -55,11 +55,13 @@ proc readInstance*(instance:string,g:Graph,seed:int):(AntColony,Graph)=
 
   file.close()
 
-  randomize(seed)
   graph.initGraph(dim,clients)
-  c=initColony(15,numT,capacity,0.6,0.5,graph,demands)
+  for i in countup(1,seed):
+    randomize(i)
+    c=initColony(20,numT,capacity,0.4,0.95,graph,demands)
+    echo c.antSystem(graph,2000)
 
-#  s=initAnt(numT,capacity,trucks,demands,graph)
+#  s=initAnt(numT,capacity,trucks,demands,graph) 0.001,0.3
   #echo "Solution:",s.cst
   #for t in s.trucks.values:
   #  echo t.route, t.leftCapacity

@@ -11,9 +11,9 @@ when isMainModule:
     best:Ant
 
   new(g)
-  (c,g)=readInstance("Vrp-Set-A/A/A-n32-k5.vrp",g,5)
-  best=c.antSystem(g,50)
+  (c,g)=readInstance("Vrp-Set-A/A/A-n32-k5.vrp",g,2)
+  #best=c.antSystem(g,2000)
   #echo $g
-  echo $best
+  #echo $best
   #  for t in a.trucks.values:
   #    echo t.route
