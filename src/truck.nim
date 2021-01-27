@@ -36,11 +36,15 @@ proc getTrucks*(numTrucks:int,capacity:float):Table[int,Truck]=
 proc cost*(t:var Truck,g:Graph)=
   var
     i,j:int
-
+  t.cst=0
   for k in countup(0,len(t.route)-2):
     i=t.route[k]
     j=t.route[k+1]
-    t.cst=t.cst+g.clients[i][j]
+    t.cst=t.cst+g.clients[i][j].distance
+    #echo i, " ", j, " ", g.clients[i][j].distance
+
+  t.cst=t.cst+g.clients[1][t.route[0]].distance+g.clients[1][t.route[len(t.route)-1]].distance
+  echo t.cst
 
 
 proc addClientRoute*(t:var Truck,c:tuple[id:int,cp:float],g:Graph)=

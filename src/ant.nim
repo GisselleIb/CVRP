@@ -29,7 +29,7 @@ proc delElem(s:var seq[tuple[id:int,cp:float]],e:tuple[id:int,cp:float])=
 proc cost*(s:Ant,g:Graph):float=  #se puede optimizar en medio de la construcción de cada camión sumando cada costo?
   var cst:float
   for t in s.trucks.values:
-    cst=cst+t.cst+g.clients[1][t.last].distance
+    cst=cst+t.cst
     #echo t.route, " ", t.cst, " ", t.leftCapacity
 
   return cst
