@@ -29,7 +29,8 @@ proc construction*(colony:var AntColony,g:Graph):(float,float)=
 
     if colony.ants[i].cst < min:
       min=colony.ants[i].cst
-      colony.best=colony.ants[i]
+      if min < colony.best.cst :
+        colony.best=colony.ants[i]
     if colony.ants[i].cst > max:
       max=colony.ants[i].cst
 
@@ -47,8 +48,6 @@ proc pheromoneUpdate*(colony:AntColony,g:var Graph)=
       g.clients[i][j].pheromone=colony.phi*g.clients[i][j].pheromone
       g.clients[j][i].pheromone=g.clients[i][j].pheromone
 
-  #colony.ants=colony.ants.sortedByIt(it.cst)
-  #echo "nvsknvsdknvdsknvdsnvsdjknvsdkjnvdsknvsd", colony.ants
 
   for a in colony.ants:
     a.routePheromone(g,0.9)
@@ -95,6 +94,6 @@ proc antSystem*(colony:var AntColony,g:var Graph,iterations:int):Ant=
     (min,max)=colony.construction(g)
     colony.antQuality(min,max)
     colony.pheromoneUpdate(g)
-  echo colony.best.cst
 
+  echo min
   return colony.best

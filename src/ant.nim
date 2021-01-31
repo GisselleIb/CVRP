@@ -29,8 +29,8 @@ proc delElem(s:var seq[tuple[id:int,cp:float]],e:tuple[id:int,cp:float])=
 proc cost*(s:Ant,g:Graph):float=  #se puede optimizar en medio de la construcción de cada camión sumando cada costo?
   var cst:float
   for t in s.trucks.values:
-    cst=cst+t.cst
-    #echo t.route, " ", t.cst, " ", t.leftCapacity
+    cst=cst+t.cst+g.clients[1][t.last].distance
+    #echo  t.cst, " ", t.leftCapacity
 
   return cst
 
@@ -59,7 +59,7 @@ proc initAnt*(numT:int,capacity:float,trucks:Table[int,Truck],demands:seq[tuple[
     if s.trucks[id].excess:
       excess.incl(id)
 
-  s.ws=1-float(excess.len())*(1/s.numTrucks)
+  s.ws=1-(excess.len()/s.numTrucks)
 
   #echo s.cst, " ",s.cost(g)
 
@@ -85,6 +85,27 @@ proc getProbabilities(tlast:int,d:seq[tuple[id:int,cp:float]],g:Graph):seq[(int,
   return pbs
 
 
+proc sampleTruck(a:Ant):int=
+  var
+    pbsT:seq[float]
+    qi,qj:float
+    i:int=1
+
+  for j in countup(1,a.numTrucks):
+    pbsT.add(1-(a.trucks[j].numClients/a.numTrucks))
+
+  qj=rand(1.0)
+
+  for p in pbsT:
+    if qi <= qj and qj < p+qi:
+      break
+    else:
+      qi=qi+p
+      i=i+1
+
+  return i
+
+
 proc constructSolution*(a:var Ant,q0:float,d:seq[(int,float)] ,g:Graph)=
   var
     d=d
@@ -95,16 +116,16 @@ proc constructSolution*(a:var Ant,q0:float,d:seq[(int,float)] ,g:Graph)=
     ri,rj,q:float
 
   while d != @[]:
-    t=rand(1..a.numTrucks)
-    q=rand(1.0)
+    t=a.sampleTruck()
     pbs=getProbabilities(a.trucks[t].last,d,g)
+    q=rand(1.0)
     #echo q, " ", q0
     if q <= q0:
       pbs=pbs.sortedByIt(it.p)
       c=d[pbs[len(pbs)-1].id]
       a.cst=a.cst-g.clients[a.trucks[t].last][1].distance+g.clients[a.trucks[t].last][c[0]].distance
       a.trucks[t].addClientRoute(c,g)
-      a.cst=a.cst+g.clients[a.trucks[t].last][1].distance
+      a.cst=a.cst+g.clients[c[0]][1].distance
       d.delElem(c)
 
     else:
@@ -112,20 +133,24 @@ proc constructSolution*(a:var Ant,q0:float,d:seq[(int,float)] ,g:Graph)=
       rj=rand(1.0)
 
       for pid in pbs:
-        if ri <= rj and rj < pid.p:
-          ri=ri+rj
+        if ri <= rj and rj < pid.p+ri:
           c=d[pid.id]
           a.cst=a.cst-g.clients[a.trucks[t].last][1].distance+g.clients[a.trucks[t].last][c[0]].distance
           a.trucks[t].addClientRoute(c,g)   #agrega la demanda a la ruta
-          a.cst=a.cst+g.clients[a.trucks[t].last][1].distance  #actualiza el costo
+          a.cst=a.cst+g.clients[c[0]][1].distance  #actualiza el costo
+          #echo "Costo ",a.cst
           d.delElem(c)
           break
 
+        else:
+          ri=ri+pid.p
+
     if a.trucks[t].excess:
       excess.incl(t)
-  a.ws=1-float(excess.len())*(1/a.numTrucks)
+
+  a.ws=1-(excess.len()/a.numTrucks)
   #echo a.ws, " ", excess.len()
-  a.cst=a.cost(g)
+
 
 
 proc routePheromone*(a:Ant,g:var Graph,phi:float)=

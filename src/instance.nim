@@ -57,8 +57,8 @@ proc readInstance*(instance:string,g:Graph,seed:int):(AntColony,Graph)=
 
   graph.initGraph(dim,clients)
   #for i in countup(1,seed):
-  #  randomize(i)
-  c=initColony(25,numT,capacity,0.4,0.9,graph,demands)
+  randomize(seed)
+  c=initColony(20,numT,capacity,0.4,0.9,graph,demands)
     #echo c.antSystem(graph,2000)
 
 
