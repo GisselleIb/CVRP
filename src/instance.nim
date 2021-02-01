@@ -8,6 +8,7 @@ import antColony
 proc readInstance*(instance:string,g:Graph,seed:int):(AntColony,Graph)=
   var
     graph=g
+    seeds:seq[int]
     c:AntColony
     dim,numT:int
     capacity:float
@@ -31,7 +32,7 @@ proc readInstance*(instance:string,g:Graph,seed:int):(AntColony,Graph)=
       l=line.split(" ")
       clients.add((parseFloat(l[2]),parseFloat(l[3])))
     elif demandsect :
-      if line.startsWith("1"):
+      if line.startsWith("1 "):
         continue
       l=line.split(" ")
       demands.add((parseInt(l[0]),parseFloat(l[1])))
@@ -56,10 +57,15 @@ proc readInstance*(instance:string,g:Graph,seed:int):(AntColony,Graph)=
   file.close()
 
   graph.initGraph(dim,clients)
-  #for i in countup(1,seed):
-  randomize(seed)
-  c=initColony(20,numT,capacity,0.4,0.9,graph,demands)
-    #echo c.antSystem(graph,2000)
+  for i in countup(1,seed):
+    randomize(seed)
+    c=initColony(25,numT,capacity,0.5,0.75,graph,demands)
+    echo i
+    echo c.antSystem(graph,5000)
+    if c.best.cst < 1000.0:
+      seeds.add(i)
+
+  echo seeds
 
 
   return (c,graph)

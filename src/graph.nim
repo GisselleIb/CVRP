@@ -6,9 +6,10 @@ type
     dim* : int
     clients*:array[1..size,array[1..size,tuple[distance:float,pheromone:float]]]
 
+
 proc initGraph*(g:var Graph,size:int,clients:seq[tuple[x:float,y:float]])=
   var
-    n:int=len(clients)
+    n:int=size
     d:float
 
   g.dim=n
@@ -21,6 +22,7 @@ proc initGraph*(g:var Graph,size:int,clients:seq[tuple[x:float,y:float]])=
         d=sqrt((clients[j-1].x-clients[i-1].x)^2 + (clients[j-1].y-clients[i-1].y)^2)
         g.clients[i][j]=(d,100.0)
         g.clients[j][i]=(d,100.0)
+
 
 proc `$`*(g:Graph):string=
   var st:string

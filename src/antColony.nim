@@ -50,7 +50,7 @@ proc pheromoneUpdate*(colony:AntColony,g:var Graph)=
 
 
   for a in colony.ants:
-    a.routePheromone(g,0.9)
+    a.routePheromone(g,0.95)
 
 
 proc initColony*(size,numTrucks:int,capacity,q0,phi:float,g:var Graph,d:seq[tuple[id:int,cp:float]]):AntColony=
@@ -95,5 +95,5 @@ proc antSystem*(colony:var AntColony,g:var Graph,iterations:int):Ant=
     colony.antQuality(min,max)
     colony.pheromoneUpdate(g)
 
-  echo min
+    #echo min
   return colony.best

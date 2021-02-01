@@ -4,6 +4,7 @@ import sets
 import random
 import truck
 import algorithm
+import sequtils
 
 type
   Ant* = object
@@ -89,14 +90,23 @@ proc sampleTruck(a:Ant):int=
   var
     pbsT:seq[float]
     qi,qj:float
+    pT:float
     i:int=1
 
   for j in countup(1,a.numTrucks):
-    pbsT.add(1-(a.trucks[j].numClients/a.numTrucks))
+    if a.trucks[j].leftCapacity == 0:
+      pbsT.add(0)
+    else:
+      pbsT.add(a.trucks[j].leftCapacity/a.capacity)
+    #echo "Clients: ",a.trucks[j].numClients
+    pT=pT+pbsT[j-1]
 
+  pbsT=map(pbsT, proc(x:float):float= return x/pT)
   qj=rand(1.0)
-
+#  echo pbsT
+  #echo qj
   for p in pbsT:
+    #echo qi, " ", qj, " ", p+qi
     if qi <= qj and qj < p+qi:
       break
     else:
@@ -111,12 +121,14 @@ proc constructSolution*(a:var Ant,q0:float,d:seq[(int,float)] ,g:Graph)=
     d=d
     t:int
     c:(int,float)
+    l:int
     excess:HashSet[int]
     pbs:seq[tuple[id:int,p:float]]
     ri,rj,q:float
 
   while d != @[]:
     t=a.sampleTruck()
+    #t=rand(1..a.numTrucks)
     pbs=getProbabilities(a.trucks[t].last,d,g)
     q=rand(1.0)
     #echo q, " ", q0
@@ -148,7 +160,11 @@ proc constructSolution*(a:var Ant,q0:float,d:seq[(int,float)] ,g:Graph)=
     if a.trucks[t].excess:
       excess.incl(t)
 
-  a.ws=1-(excess.len()/a.numTrucks)
+  l=excess.len()
+  a.ws=1-(l/a.numTrucks)
+
+  if l > 0 :
+    a.cst=a.cst*1.08
   #echo a.ws, " ", excess.len()
 
 
@@ -156,16 +172,20 @@ proc constructSolution*(a:var Ant,q0:float,d:seq[(int,float)] ,g:Graph)=
 proc routePheromone*(a:Ant,g:var Graph,phi:float)=
   var
     i:int=1
-    ti:float
+    ti,tj:float
+
+  tj=(phi*a.ws*a.quality)
 
   for t in a.trucks.values:
     for c in t.route:
-      ti=g.clients[i][c].pheromone
-      ti=ti+(phi*a.ws*a.quality) #se actualiza la feromona de la arista
+      ti=g.clients[i][c].pheromone+tj #se actualiza la feromona de la arista
       g.clients[i][c].pheromone=ti
       g.clients[c][i].pheromone=ti
       #echo i, " ",c, " ",ti, " ", a.ws, " ", a.quality
       i=c
+
+    g.clients[i][1].pheromone=g.clients[i][1].pheromone+tj
+    g.clients[1][i].pheromone=g.clients[i][1].pheromone
 
 
 proc resetRoute*(a:var Ant)=
@@ -179,7 +199,6 @@ proc resetRoute*(a:var Ant)=
 
 proc solutionQuality*(a:var Ant,min,max:float)=
   a.quality=1-((a.cst-min)/(max-min))
-
 
 
 proc `$`*(a:Ant):string=
