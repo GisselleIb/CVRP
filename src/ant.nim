@@ -6,7 +6,15 @@ import truck
 import algorithm
 import sequtils
 
+## Module that defines the behavior of an artifitial ant of the ant colony.
+
 type
+  ## Definition of the class that models the ants that construct solutions in
+  ## the graph. The ant models a solution for the CVRP, so it keeps track of
+  ## each ``truck`` in a hash table.
+  ## The attribute ws indicates how many trucks have excess their capacity, if
+  ## ws = 1, then no truck have an excess and the solution is feasible, if ws = 0
+  ## then all the trucks have an excess and the solution is not feasible.
   Ant* = object
     numTrucks*:int
     trucks* :Table[int,Truck]
@@ -17,6 +25,7 @@ type
 
 
 proc delElem(s:var seq[tuple[id:int,cp:float]],e:tuple[id:int,cp:float])=
+  ## Deletes a ``e`` demand from the list of client demands
   var
     j:int=0
 
@@ -31,12 +40,13 @@ proc cost*(s:Ant,g:Graph):float=  #se puede optimizar en medio de la construcci√
   var cst:float
   for t in s.trucks.values:
     cst=cst+t.cst+g.clients[1][t.last].distance
-    #echo  t.cst, " ", t.leftCapacity
 
   return cst
 
 
 proc initAnt*(numT:int,capacity:float,trucks:Table[int,Truck],demands:seq[tuple[id:int,cp:float]],g:Graph):Ant=
+  ## Initializes an ant, assigns each client randomly to a random truck and
+  ## calculates the cost, ws and quality of the resulting solution.
   var
     s:Ant
     excess:HashSet[int]
@@ -44,7 +54,6 @@ proc initAnt*(numT:int,capacity:float,trucks:Table[int,Truck],demands:seq[tuple[
     c:(int,float)
     id:int
 
-  #new(s)
   s.numTrucks=numT
   s.capacity=capacity
   s.trucks=trucks
@@ -62,31 +71,31 @@ proc initAnt*(numT:int,capacity:float,trucks:Table[int,Truck],demands:seq[tuple[
 
   s.ws=1-(excess.len()/s.numTrucks)
 
-  #echo s.cst, " ",s.cost(g)
-
   return s
 
 
 proc getProbabilities(tlast:int,d:seq[tuple[id:int,cp:float]],g:Graph):seq[(int,float)]=
+  ## Gets the vector of probabilities of choosing each demand of the remaining
+  ## ones, given the id of the last client in the route of the truck.
   var
     i:int=0
     pbs:seq[tuple[id:int,p:float]]
     T:float
 
   for c in d:
-  #  echo c.id, " ",tlast, " ",g.clients[tlast][c.id].pheromone
     T=T+g.clients[tlast][c.id].pheromone
 
-  #echo "T: ",T
   for c in d:
     pbs.add((i,g.clients[tlast][c.id].pheromone/T))  #sin alfa y Beta ni N(i,j)
     i=i+1
 
-  #echo pbs
   return pbs
 
 
 proc sampleTruck(a:Ant):int=
+  ## Samples a truck from the hash table to add a new client. The trucks with
+  ## less clients in their routes will have a greater probability than the ones
+  ## with more clients.
   var
     pbsT:seq[float]
     qi,qj:float
@@ -98,15 +107,13 @@ proc sampleTruck(a:Ant):int=
       pbsT.add(0)
     else:
       pbsT.add(a.trucks[j].leftCapacity/a.capacity)
-    #echo "Clients: ",a.trucks[j].numClients
+
     pT=pT+pbsT[j-1]
 
   pbsT=map(pbsT, proc(x:float):float= return x/pT)
   qj=rand(1.0)
-#  echo pbsT
-  #echo qj
+
   for p in pbsT:
-    #echo qi, " ", qj, " ", p+qi
     if qi <= qj and qj < p+qi:
       break
     else:
@@ -117,6 +124,8 @@ proc sampleTruck(a:Ant):int=
 
 
 proc constructSolution*(a:var Ant,q0:float,d:seq[(int,float)] ,g:Graph)=
+  ## Construct a solution from zero, sampling each truck and sampling
+  ## a new client demand using a distribution based in the pheromone model.
   var
     d=d
     t:int
@@ -150,7 +159,6 @@ proc constructSolution*(a:var Ant,q0:float,d:seq[(int,float)] ,g:Graph)=
           a.cst=a.cst-g.clients[a.trucks[t].last][1].distance+g.clients[a.trucks[t].last][c[0]].distance
           a.trucks[t].addClientRoute(c,g)   #agrega la demanda a la ruta
           a.cst=a.cst+g.clients[c[0]][1].distance  #actualiza el costo
-          #echo "Costo ",a.cst
           d.delElem(c)
           break
 
@@ -165,11 +173,10 @@ proc constructSolution*(a:var Ant,q0:float,d:seq[(int,float)] ,g:Graph)=
 
   if l > 0 :
     a.cst=a.cst*1.08
-  #echo a.ws, " ", excess.len()
-
 
 
 proc routePheromone*(a:Ant,g:var Graph,phi:float)=
+  ## Updates the pheromones in the route constructed by the ant
   var
     i:int=1
     ti,tj:float
@@ -181,7 +188,6 @@ proc routePheromone*(a:Ant,g:var Graph,phi:float)=
       ti=g.clients[i][c].pheromone+tj #se actualiza la feromona de la arista
       g.clients[i][c].pheromone=ti
       g.clients[c][i].pheromone=ti
-      #echo i, " ",c, " ",ti, " ", a.ws, " ", a.quality
       i=c
 
     g.clients[i][1].pheromone=g.clients[i][1].pheromone+tj
@@ -189,6 +195,8 @@ proc routePheromone*(a:Ant,g:var Graph,phi:float)=
 
 
 proc resetRoute*(a:var Ant)=
+  ## Resets the ant to an empty solution with cost of zero and each truck with
+  ## an empty route
   for i in countup(1,a.numTrucks):
     a.trucks[i].resetTruck(a.capacity)
 
@@ -198,10 +206,13 @@ proc resetRoute*(a:var Ant)=
 
 
 proc solutionQuality*(a:var Ant,min,max:float)=
+  ## Calculates the quality of the solution given the minimum and maximum cost
+  ## obtain in the iteration.
   a.quality=1-((a.cst-min)/(max-min))
 
 
 proc `$`*(a:Ant):string=
+  ## Gets the representation of an ant as a string.
   var st:string
   st="ANT" & "\nNumTrucks:" & $a.numTrucks & "\nCost Solution: " & $a.cst
   for k,t in a.trucks.pairs:

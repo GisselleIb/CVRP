@@ -5,10 +5,12 @@ import graph
 import random
 import antColony
 
-proc readInstance*(instance:string,g:Graph,seed:int):(AntColony,Graph)=
+## Module used to read the cvrp instances
+proc readInstance*(instance:string,g:Graph,seed,numAnts:int):(AntColony,Graph)=
+  ## Reads the instance passed as string if it exists, and creates the
+  ## graph of the problem and the colony of ants .
   var
     graph=g
-    seeds:seq[int]
     c:AntColony
     dim,numT:int
     capacity:float
@@ -57,15 +59,8 @@ proc readInstance*(instance:string,g:Graph,seed:int):(AntColony,Graph)=
   file.close()
 
   graph.initGraph(dim,clients)
-  for i in countup(1,seed):
-    randomize(seed)
-    c=initColony(25,numT,capacity,0.5,0.75,graph,demands)
-    echo i
-    echo c.antSystem(graph,5000)
-    if c.best.cst < 1000.0:
-      seeds.add(i)
 
-  echo seeds
-
+  randomize(seed)
+  c=initColony(numAnts,numT,capacity,0.6,0.75,graph,demands) #0.5 0.75
 
   return (c,graph)

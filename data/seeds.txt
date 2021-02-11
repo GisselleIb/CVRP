@@ -1,0 +1,8 @@
+A-n32-k5:
+q0=0.6 phi=0.75 iterations=3000 ants=20 semillas: [5,42,52]
+
+A-n44-k6:
+q0=0.6 phi=0.75 iterations=7000 ants=30 semillas: [82,14]
+
+A-n60-k9:
+q0=0.6 phi=0.75 iterations=9000 ants=35 semillas: [24,12]
